@@ -12,11 +12,11 @@ const productSchema = new mongoose.Schema({
     max: { type: Number, default: 99 },
     default: { type: Number, default: 1 }
   },
-  //use blob for image 
   productImage: { 
-    url: { type: String, required: true },  
-    altText: { type: String, required: true } 
-  }
+    data: { type: Buffer, required: true },  // BLOB to store the binary data of the image
+    contentType: { type: String, required: true },  // MIME type of the image (e.g., 'image/jpeg')
+    altText: { type: String, required: true },  // Alt text for accessibility
+  },
 },{
   timestamps: true,
 }

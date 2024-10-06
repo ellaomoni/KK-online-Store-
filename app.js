@@ -23,6 +23,7 @@ const connectDB = require('./database/connect');
 // routes
 const productRouter = require('./routes/productRoutes');
 const ordersRouter = require('./routes/ordersRoute');
+const adminRouter = require('./routes/adminRoutes')
 
 
 //middlewares
@@ -48,7 +49,8 @@ app.use(cookieParser(process.env.JWT_SECRET));
 app.use(fileUpload());
 
 app.use('/api/v1/products', productRouter);
-app.use('/api/v1/orders', ordersRouter)
+app.use('/api/v1/orders', ordersRouter);
+app.use('/api/v1/admin', adminRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);

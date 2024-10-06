@@ -1,25 +1,22 @@
-const Admin = require('../models/Admin');
+const Admin = require('../models/Admin');  // Ensure Admin schema includes email
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const jwt = require('jsonwebtoken');
 
-
 // Handle admin registration (one-time use for the first admin)
 const register = async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({ message: 'Please provide a username and password' });
+  // Check if email already exists
+  const emailAlreadyExists = await Admin.findOne({ email });
+  if (emailAlreadyExists) {
+    return res.status(400).json({ message: 'Email already exists' });
   }
-
-  // Check if an admin already exists
-  const existingAdmin = await Admin.findOne({ username });
-  if (existingAdmin) {
-    return res.status(400).json({ message: 'Admin already exists' });
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Please provide email, username, and password' });
   }
-
   try {
-    const admin = await Admin.create({ username, password });
+    const admin = await Admin.create({ email, password });
     res.status(201).json({ message: 'Admin registered successfully', admin });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -28,13 +25,13 @@ const register = async (req, res) => {
 
 // Handle admin login
 const login = async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({ message: 'Please provide username and password' });
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Please provide email and password' });
   }
 
-  const admin = await Admin.findOne({ username });
+  const admin = await Admin.findOne({ email });
   if (!admin) {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
@@ -59,7 +56,7 @@ const authenticateAdmin = (req, res, next) => {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.admin = { adminId: payload.adminId, username: payload.username };
+    req.admin = { adminId: payload.adminId, email: payload.email };  // Added email to payload
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Authentication invalid' });

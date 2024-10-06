@@ -7,28 +7,35 @@ const {
 } = require('../middlewares/authentication');
 
 const {
-    createProduct,
-    getAllProducts,
-    getSingleProduct,
-    updateProduct,
-    deleteProduct,
-    uploadProductImage,
-} = require('../controllers.js/productController.js');
+  createProduct,
+  getAllProducts,
+  getSingleProduct,
+  updateProduct,
+  deleteProduct,
+  uploadProductImage,
+  getProductImage,
+  updateProductImage,
+  deleteProductImage,
+} = require('../controllers.js/productController');
 
+// Routes for products
 router
   .route('/')
   .post([authenticateUser, authorizePermissions('admin')], createProduct)
   .get(getAllProducts);
 
 router
-  .route('/uploadImage')
-  .post([authenticateUser, authorizePermissions('admin')], uploadProductImage);
-
-router
   .route('/:id')
-  .get(getSingleProduct)
-  .patch([authenticateUser, authorizePermissions('admin')], updateProduct)
-  .delete([authenticateUser, authorizePermissions('admin')], deleteProduct);
+  .get(getSingleProduct)  // Public access
+  .patch([authenticateUser, authorizePermissions('admin')], updateProduct)  // Admin only
+  .delete([authenticateUser, authorizePermissions('admin')], deleteProduct);  // Admin only
 
+// Routes for product image management
+router
+  .route('/:id/image')
+  .post([authenticateUser, authorizePermissions('admin')], uploadProductImage)  // Admin only: Upload image
+  .get(getProductImage)  // Public access: Retrieve image
+  .patch([authenticateUser, authorizePermissions('admin')], updateProductImage)  // Admin only: Update image
+  .delete([authenticateUser, authorizePermissions('admin')], deleteProductImage);  // Admin only: Delete image
 
 module.exports = router;
