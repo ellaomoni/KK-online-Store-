@@ -30,15 +30,16 @@ const login = async (req, res) => {
     }
 
     //Admin.findOne, instead of user.findOne
-    const user = await Admin.findOne({ email });
+    const admin = await Admin.findOne({ email });
 
-    if (!user) {
+    if (!admin) {
       throw new CustomError.UnauthenticatedError("Invalid Credentials");
     }
 
-    const tokenUser = createTokenUser(user);
-    attachCookiesToResponse({ res, user: tokenUser });
-    res.status(StatusCodes.OK).json({ user: tokenUser });
+    //tokenAdmin
+    const tokenAdmin = createTokenUser(user);
+    attachCookiesToResponse({ res, user: tokenAdmin });
+    res.status(StatusCodes.OK).json({ user: tokenAdmin });
   };
 };
 const logout = async (req, res) => {
