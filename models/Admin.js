@@ -1,48 +1,43 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const validator = require('validator');
+const bcrypt = require('bcryptjs');
 
 const AdminSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: [true, 'Please provide a username'],
-    unique: true,
-  },
   email: {
     type: String,
-    unique: true,
     required: [true, 'Please provide email'],
-    validate: {
-      validator: validator.isEmail,
-      message: 'Please provide valid email',
-    },
+    unique: true,
+  },
+  name: {
+    type: String,
+    required: [true, 'Please provide username'],
+    minlength: 3,
+    maxlength: 50,
   },
   password: {
     type: String,
-    required: [true, 'Please provide a password'],
-    minlength: 6,
+    required: [true, 'Please provide password'],
+    minlength: 8,
+  },
+  role: {
+    type: String,
+    enum: ['admin', 'user'],
+    default: 'user',
   },
 });
 
 // Hash password before saving
 AdminSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password')) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
-// Compare passwords for login
+// Compare passwords during login
 AdminSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
-};
-
-// Generate JWT token for authentication
-AdminSchema.methods.createJWT = function () {
-  return jwt.sign({ adminId: this._id, username: this.username }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_LIFETIME,
-  });
+  const isMatch = await bcrypt.compare(candidatePassword, this.password);
+  return isMatch;
 };
 
 module.exports = mongoose.model('Admin', AdminSchema);

@@ -1,0 +1,10 @@
+[{
+    "name":"KK shirt",
+  "productCollection": "KK collection",  
+  "description": "This is a blue shirt",
+  "price": 1000,
+  "color": "Black",
+  "availableSizes": ["S", "L", "xl"],
+  "quantitySelector":  1
+  }
+]

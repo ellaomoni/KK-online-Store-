@@ -4,9 +4,9 @@ const CustomError = require('../errors');
 const path = require('path');
 
 const createProduct = async (req, res) => {
-    req.body.user = req.user.userId;
+    req.body.admin = req.user.adminId;
     const product = await Product.create(req.body);
-    res.status(StatusCodes.CREATED).JSON({product});
+    res.status(StatusCodes.CREATED).json({product});
 };
 
 const getAllProducts = async (req, res) => {

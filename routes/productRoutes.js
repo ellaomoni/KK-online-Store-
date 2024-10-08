@@ -26,7 +26,7 @@ router
 
 router
   .route('/:id')
-  .get(getSingleProduct)  // Public access
+  .get(getSingleProduct)  
   .patch([authenticateUser, authorizePermissions('admin')], updateProduct)  // Admin only
   .delete([authenticateUser, authorizePermissions('admin')], deleteProduct);  // Admin only
 
