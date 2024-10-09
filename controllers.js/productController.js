@@ -2,17 +2,127 @@ const Product = require("../models/Product");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
 const path = require("path");
+const multer = require("multer");
+const fs = require("fs");
+
+const uploadDir = path.join(__dirname, "../productImages");
+
+//for file upload
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Configure multer storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir); // Use the defined upload directory
+  },
+  filename: (req, file, cb) => {
+    const { name, productCollection } = req.body;
+
+    // Sanitize the product name and collection for file naming
+    const sanitizedProductName = name.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+    const sanitizedCollection = productCollection
+      .replace(/[^a-z0-9]/gi, "_")
+      .toLowerCase();
+
+    // Construct the file name using the product name and collection
+    const fileName = `${sanitizedProductName}_${sanitizedCollection}${path.extname(
+      file.originalname
+    )}`;
+
+    cb(null, fileName);
+  },
+});
+
+const upload = multer({ storage });
 
 const createProduct = async (req, res) => {
-  req.body.admin = req.user.adminId;
-  const product = await Product.create(req.body);
-  res.status(StatusCodes.CREATED).json({ product });
+  try {
+    const {
+      name,
+      productCollection,
+      description,
+      price,
+      color,
+      availableSizes,
+      quantitySelector,
+      altText,
+    } = req.body;
+
+    const imagePath = req.file.path;
+    const sanitizedProductName = name.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+    const sanitizedCollection = productCollection
+      .replace(/[^a-z0-9]/gi, "_")
+      .toLowerCase();
+
+    const formattedFilename = `${sanitizedProductName}-${sanitizedCollection}${path.extname(
+      req.file.originalname
+    )}`;
+    const productImageUrl = `/productImages/${formattedFilename}`; // Construct the image URL
+
+    const product = await Product.create({
+      name,
+      productCollection,
+      description,
+      price,
+      color,
+      availableSizes: JSON.parse(availableSizes),
+      quantitySelector: JSON.parse(quantitySelector),
+      productImage: {
+        data: imagePath,
+        contentType: req.file.mimetype,
+        altText: altText,
+        productImageUrl: productImageUrl,
+      },
+    });
+
+    res.status(StatusCodes.CREATED).json({
+      product: {
+        ...product.toObject(),
+      },
+    });
+  } catch (error) {
+    console.error("Error creating product:", error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "Error creating product",
+      error: error.message,
+    });
+  }
 };
 
 const getAllProducts = async (req, res) => {
-  const products = await Product.find({});
+  try {
+    const products = await Product.find({});
 
-  res.status(StatusCodes.OK).json({ products, count: products.length });
+    const formattedProducts = products.map((product) => ({
+      _id: product._id,
+      name: product.name,
+      productCollection: product.productCollection,
+      description: product.description,
+      price: product.price,
+      color: product.color,
+      availableSizes: product.availableSizes,
+      quantitySelector: product.quantitySelector,
+      productImage: {
+        productImageUrl: product.productImage.productImageUrl,
+        //i cannot return base64
+        // image: product.productImage.data,
+        altText: product.productImage.altText,
+      },
+    }));
+
+    res
+      .status(StatusCodes.OK)
+      .json({ products: formattedProducts, count: products.length });
+  } catch (err) {
+    console.log(err);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      status: 500,
+      message: "Internal Server Error",
+      error: err.message,
+    });
+  }
 };
 
 const getSingleProduct = async (req, res) => {
@@ -27,10 +137,26 @@ const getSingleProduct = async (req, res) => {
         StatusCodes.NOT_FOUND
       );
     }
+
+    const formattedProduct = {
+      _id: product._id,
+      name: product.name,
+      productCollection: product.productCollection,
+      description: product.description,
+      price: product.price,
+      color: product.color,
+      availableSizes: product.availableSizes,
+      quantitySelector: product.quantitySelector,
+      productImage: {
+        productImageUrl: product.productImage.productImageUrl,
+        altText: product.productImage.altText,
+      },
+    };
+
     return res.status(StatusCodes.OK).json({
       status: 200,
-      message: "product retrieved successfully",
-      product,
+      message: "Product retrieved successfully",
+      product: formattedProduct,
     });
   } catch (err) {
     console.log(err);
@@ -193,6 +319,7 @@ const deleteProductImage = async (req, res) => {
 };
 
 module.exports = {
+  upload,
   createProduct,
   getAllProducts,
   getSingleProduct,
