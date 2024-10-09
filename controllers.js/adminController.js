@@ -1,47 +1,55 @@
 const Admin = require("../models/Admin");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
-const { attachCookiesToResponse, createTokenUser } = require("../utils");
+const { attachCookiesToResponse, createJWT } = require("../utils/jwt");
 
 //admin registration
 const register = async (req, res) => {
-  const { name, email, password } = req.body;
-  const emailAlreadyExists = await User.findone({ email });
-  if (emailAlreadyExists) {
-    throw new CustomError.BadRequestError("Email already exists");
-  }
+  try {
+    const { name, email, password } = req.body;
+    const emailAlreadyExists = await Admin.findOne({ email });
+    if (emailAlreadyExists) {
+      throw new CustomError.BadRequestError("Email already exists");
+    }
 
-  const user = await User.create({ email, password, name, role });
-  const tokenUser = createTokenUser(user);
-  attachCookiesToResponse({ res, user: tokenUser });
-  res.status(StatusCodes.CREATED).json({ user: tokenUser });
+    const admin = await Admin.create({ email, password, name });
+    const tokenUser = createJWT(admin);
+    attachCookiesToResponse({ res, user: tokenUser });
+    return res.status(StatusCodes.CREATED).json({
+      status: 201,
+      message: "created successfully",
+      accessToken: tokenUser,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      status: 500,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
 };
 //admin login
 const login = async (req, res) => {
   const { email, password } = req.body;
 
-  const login = async (req, res) => {
-    const { email, password } = req.body;
+  if (!email || !password) {
+    throw new CustomError.BadRequestError("Please provide email and password");
+  }
 
-    if (!email || !password) {
-      throw new CustomError.BadRequestError(
-        "Please provide email and password"
-      );
-    }
+  //Admin.findOne, instead of user.findOne
+  const admin = await Admin.findOne({ email });
 
-    //Admin.findOne, instead of user.findOne
-    const admin = await Admin.findOne({ email });
+  if (!admin) {
+    throw new CustomError.UnauthenticatedError("Invalid Credentials");
+  }
 
-    if (!admin) {
-      throw new CustomError.UnauthenticatedError("Invalid Credentials");
-    }
-
-    //tokenAdmin
-    const tokenAdmin = createTokenUser(user);
-    attachCookiesToResponse({ res, user: tokenAdmin });
-    res.status(StatusCodes.OK).json({ user: tokenAdmin });
-  };
+  //tokenAdmin
+  const tokenAdmin = createTokenUser(user);
+  attachCookiesToResponse({ res, user: tokenAdmin });
+  res.status(StatusCodes.OK).json({ user: tokenAdmin });
 };
+
 const logout = async (req, res) => {
   res.cookie("token", "logout", {
     httpOnly: true,
