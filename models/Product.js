@@ -1,25 +1,28 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const productSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  productCollection: { type: String, required: true },  
-  description: { type: String, required: true },
-  price: { type: Number, required: true },
-  color: { type: String, required: true },
-  availableSizes: [{ type: String, required: true }],
-  quantitySelector: {
-    min: { type: Number, default: 1 },
-    max: { type: Number, default: 99 },
-    default: { type: Number, default: 1 }
+const productSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    productCollection: { type: String, required: true },
+    description: { type: String, required: true },
+    price: { type: Number, required: true },
+    color: { type: String, required: true },
+    availableSizes: [{ type: String, required: true }],
+    quantitySelector: {
+      min: { type: Number, default: 1 },
+      max: { type: Number, default: 99 },
+      default: { type: Number, default: 1 },
+    },
+    productImage: {
+      data: { type: Buffer, required: false }, // BLOB to store the binary data of the image
+      contentType: { type: String, required: false }, // MIME type of the image (e.g., 'image/jpeg')
+      altText: { type: String, required: false },
+      productImageUrl: { type: String, required: false },
+    },
   },
-  productImage: { 
-    data: { type: Buffer, required: true },  // BLOB to store the binary data of the image
-    contentType: { type: String, required: true },  // MIME type of the image (e.g., 'image/jpeg')
-    altText: { type: String, required: true },  // Alt text for accessibility
-  },
-},{
-  timestamps: true,
-}
+  {
+    timestamps: true,
+  }
 );
 
-module.exports = mongoose.model('Product', productSchema);
+module.exports = mongoose.model("Product", productSchema);
