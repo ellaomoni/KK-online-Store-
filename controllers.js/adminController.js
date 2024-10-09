@@ -31,23 +31,40 @@ const register = async (req, res) => {
 };
 //admin login
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  if (!email || !password) {
-    throw new CustomError.BadRequestError("Please provide email and password");
+    if (!email || !password) {
+      throw new CustomError.BadRequestError(
+        "Please provide email and password"
+      );
+    }
+
+    //Admin.findOne, instead of user.findOne
+    const admin = await Admin.findOne({ email });
+
+    if (!admin) {
+      throw new CustomError.UnauthenticatedError("Invalid Credentials");
+    }
+
+    //tokenAdmin
+    const tokenAdmin = createJWT(admin);
+
+    // not optional for now, if the frontend devs are not using the cookies
+    // attachCookiesToResponse({ res, user: tokenAdmin });
+    res.status(StatusCodes.OK).json({
+      status: 200,
+      message: "logged in successfully",
+      token: tokenAdmin,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      status: 500,
+      message: "Internal Server Error",
+      error: err.message,
+    });
   }
-
-  //Admin.findOne, instead of user.findOne
-  const admin = await Admin.findOne({ email });
-
-  if (!admin) {
-    throw new CustomError.UnauthenticatedError("Invalid Credentials");
-  }
-
-  //tokenAdmin
-  const tokenAdmin = createTokenUser(user);
-  attachCookiesToResponse({ res, user: tokenAdmin });
-  res.status(StatusCodes.OK).json({ user: tokenAdmin });
 };
 
 const logout = async (req, res) => {
