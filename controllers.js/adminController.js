@@ -47,6 +47,13 @@ const login = async (req, res) => {
       throw new CustomError.UnauthenticatedError("Invalid Credentials");
     }
 
+    //Compare the provided password with the stored password
+    const isPasswordCorrect = await admin.comparePassword(password);
+    if (!isPasswordCorrect) {
+      throw new CustomError.UnauthenticatedError("Invalid Credentials");
+    }
+
+
     //tokenAdmin
     const tokenAdmin = createJWT(admin);
 

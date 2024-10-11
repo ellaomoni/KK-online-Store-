@@ -50,6 +50,11 @@ const createProduct = async (req, res) => {
       altText,
     } = req.body;
 
+   // Check if file is uploaded
+    if (!req.file) {
+      return res.status(400).json({ message: 'Product image is required' });
+    }
+
     const imagePath = req.file.path;
     const sanitizedProductName = name.replace(/[^a-z0-9]/gi, "_").toLowerCase();
     const sanitizedCollection = productCollection
@@ -59,6 +64,7 @@ const createProduct = async (req, res) => {
     const formattedFilename = `${sanitizedProductName}-${sanitizedCollection}${path.extname(
       req.file.originalname
     )}`;
+
     const productImageUrl = `/productImages/${formattedFilename}`; // Construct the image URL
 
     const product = await Product.create({

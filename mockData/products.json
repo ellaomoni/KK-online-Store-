@@ -5,6 +5,7 @@
   "price": 1000,
   "color": "Black",
   "availableSizes": ["S", "L", "xl"],
-  "quantitySelector":  1
+  "quantitySelector":  1,
+  "productImage" "C:\Users\user\Pictures\download.png"
   }
 ]

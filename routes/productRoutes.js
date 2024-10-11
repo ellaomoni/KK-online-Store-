@@ -26,7 +26,7 @@ router
   .route("/")
   .post(
     [jwtService.verifyToken.bind(jwtService)],
-    upload.single("image"),
+    upload.single('productImage'),
     createProduct
   )
   .get(getAllProducts);
