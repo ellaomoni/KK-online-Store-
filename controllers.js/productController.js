@@ -309,6 +309,7 @@ const updateProductImage = async (req, res) => {
     .json({ message: "Product image updated successfully", product });
 };
 // Delete Product Image
+//fixed
 const deleteProductImage = async (req, res) => {
   const { id: productId } = req.params;
 
