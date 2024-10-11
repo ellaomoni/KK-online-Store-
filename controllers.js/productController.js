@@ -50,9 +50,9 @@ const createProduct = async (req, res) => {
       altText,
     } = req.body;
 
-   // Check if file is uploaded
+    // Check if file is uploaded
     if (!req.file) {
-      return res.status(400).json({ message: 'Product image is required' });
+      return res.status(400).json({ message: "Product image is required" });
     }
 
     const imagePath = req.file.path;
@@ -195,14 +195,27 @@ const updateProduct = async (req, res) => {
 };
 
 const deleteProduct = async (req, res) => {
-  const { id: productId } = req.params;
+  try {
+    const { id: productId } = req.params;
 
-  const deletedProduct = await Product.findById({ _id: productId });
-  if (!deletedProduct) {
-    throw new CustomError(
-      `No Product with id : ${productId}`,
-      StatusCodes.NOT_FOUND
-    );
+    const deletedProduct = await Product.findById({ _id: productId });
+    if (!deletedProduct) {
+      throw new CustomError(
+        `No Product with id : ${productId}`,
+        StatusCodes.NOT_FOUND
+      );
+    }
+    await Product.deleteOne();
+    return res.status(200).json({
+      status: 200,
+      message: "product deleted successfully",
+    });
+  } catch (err) {
+    console.error("Error deleting product:", error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "Error deleting product",
+      error: err.message,
+    });
   }
 };
 
