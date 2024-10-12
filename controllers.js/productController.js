@@ -174,23 +174,34 @@ const getSingleProduct = async (req, res) => {
   }
 };
 
+// Update the product
 const updateProduct = async (req, res) => {
   const { id: productId } = req.params;
 
-  const updatedProduct = await Product.findByIdAndUpdate(
-    { _id: productId },
-    req.body,
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
-
-  if (!updatedProduct) {
-    throw new CustomError(
-      `No Product with id : ${productId}`,
-      StatusCodes.NOT_FOUND
+  try {
+    
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,  // Use productId directly, no need for `{ _id: productId }`
+      req.body,
+      {
+        new: true,          
+        runValidators: true, 
+      }
     );
+
+    // Check if the product was found and updated
+    if (!updatedProduct) {
+      throw new CustomError.NotFoundError(`No product with id: ${productId}`);
+    }
+
+    // Send the updated product as the response
+    res.status(StatusCodes.OK).json({ product: updatedProduct });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: 'Error updating product',
+      error: error.message,
+    });
   }
 };
 
