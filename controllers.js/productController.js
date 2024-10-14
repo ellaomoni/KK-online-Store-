@@ -208,14 +208,20 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
   const { id: productId } = req.params;
 
-  const deletedProduct = await Product.findById({ _id: productId });
+  // Attempt to find and delete the product
+  const deletedProduct = await Product.findByIdAndDelete(productId);
+
   if (!deletedProduct) {
     throw new CustomError(
-      `No Product with id : ${productId}`,
+      `No product with id: ${productId}`,
       StatusCodes.NOT_FOUND
     );
   }
+
+  // Send a success response
+  res.status(StatusCodes.OK).json({ message: "Product deleted successfully." });
 };
+
 
 const uploadProductImage = async (req, res) => {
   if (!req.files || !req.files.image) {
