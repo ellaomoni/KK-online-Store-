@@ -206,8 +206,7 @@ const updateProduct = async (req, res) => {
 };
 
 const deleteProduct = async (req, res) => {
-  try {
-    const { id: productId } = req.params;
+  const { id: productId } = req.params;
 
   // Attempt to find and delete the product
   const deletedProduct = await Product.findByIdAndDelete(productId);
