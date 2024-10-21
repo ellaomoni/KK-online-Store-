@@ -1,21 +1,85 @@
-const Order = require('../models/Order');
-const { StatusCodes } = require('http-status-codes');
-const CustomError = require('../errors');
+const Order = require("../models/Order");
+const { StatusCodes } = require("http-status-codes");
+const CustomError = require("../errors");
+const Product = require("../models/Product");
 
 // Create a new order
 const createOrder = async (req, res) => {
-  // Extract order details from request body
-  const { items, totalPrice, shippingAddress } = req.body;
+  try {
+    const {
+      items,
+      billingAddress,
+      shippingAddress,
+      paymentInfo,
+      customerNote,
+    } = req.body;
 
-  // Create the new order in the database
-  const order = await Order.create({
-    items,
-    totalPrice,
-    shippingAddress,
-    // user: req.user.userId (if you want to track who created the order, omit if not needed)
-  });
+    const orderItems = await Promise.all(
+      items.map(async (item) => {
+        const product = await Product.findById(item.product);
+        if (!product) {
+          throw new Error("Product not found");
+        }
+        // console.log(product);
 
-  res.status(StatusCodes.CREATED).json({ order });
+        if (item.amount > product.quantitySelector.max) {
+          throw new Error(
+            `Only ${product.quantitySelector.max} items are available for ${product.name}`
+          );
+        }
+
+        return {
+          name: product.name,
+          image: product.productImage.productImageUrl,
+          price: product.price,
+          amount: item.amount,
+          product: product._id,
+        };
+      })
+    );
+
+    const subtotal = orderItems.reduce(
+      (acc, item) => acc + item.price * item.amount,
+      0
+    );
+    const shippingFee = req.body.shippingFee || 0;
+    const total = subtotal + shippingFee;
+
+    const order = new Order({
+      items: orderItems,
+      subtotal,
+      shippingFee,
+      total,
+      billingAddress,
+      shippingAddress,
+      paymentInfo,
+      customerNote,
+    });
+
+    // Save the order
+    const savedOrder = await order.save();
+
+    await Promise.all(
+      orderItems.map(async (item) => {
+        await Product.findByIdAndUpdate(
+          item.product,
+          {
+            $inc: { "quantitySelector.max": -item.amount },
+          },
+          { new: true }
+        );
+      })
+    );
+
+    return res.status(201).json({
+      message: "Order created successfully",
+      order: savedOrder,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server Error", error: error.message });
+  }
 };
 
 // Get all orders (admin only)
@@ -30,7 +94,7 @@ const getUserOrders = async (req, res) => {
 
   if (!orders.length) {
     return res.status(StatusCodes.NOT_FOUND).json({
-      message: 'No orders found.',
+      message: "No orders found.",
     });
   }
 
@@ -41,7 +105,7 @@ const getUserOrders = async (req, res) => {
 // Get a single order by ID (no authentication required)
 const getSingleOrder = async (req, res) => {
   const { id: orderId } = req.params;
-  
+
   const order = await Order.findOne({ _id: orderId });
   if (!order) {
     throw new CustomError.NotFoundError(`No order with id: ${orderId}`);

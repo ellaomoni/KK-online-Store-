@@ -50,9 +50,9 @@ const createProduct = async (req, res) => {
       altText,
     } = req.body;
 
-   // Check if file is uploaded
+    // Check if file is uploaded
     if (!req.file) {
-      return res.status(400).json({ message: 'Product image is required' });
+      return res.status(400).json({ message: "Product image is required" });
     }
 
     const imagePath = req.file.path;
@@ -313,6 +313,7 @@ const updateProductImage = async (req, res) => {
     .json({ message: "Product image updated successfully", product });
 };
 // Delete Product Image
+//fixed
 const deleteProductImage = async (req, res) => {
   const { id: productId } = req.params;
 
