@@ -7,7 +7,7 @@ const SingleOrderItemSchema = mongoose.Schema({
     type: String,
     required: true,
     match: [
-      /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|svg))$/i,
+      /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|svg))|(^\/.*\.(?:png|jpg|jpeg|gif|svg))$/i,
       "Please provide a valid image URL",
     ],
   },
@@ -67,15 +67,10 @@ const OrderSchema = new mongoose.Schema(
     total: { type: Number, required: true },
 
     billingAddress: { type: AddressSchema, required: true },
-    shippingAddress: { type: AddressSchema, required: true },
+    // shippingAddress: { type: AddressSchema, required: true },
 
     paymentInfo: { type: PaymentSchema, required: true },
 
-    orderStatus: {
-      type: String,
-      enum: ["pending", "confirmed", "shipped", "delivered"],
-      default: "pending",
-    },
     orderDate: { type: Date, default: Date.now },
 
     customerNote: { type: String },
